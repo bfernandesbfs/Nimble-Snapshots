@@ -179,7 +179,14 @@ func performDynamicSizeSnapshotTest(_ name: String?,
                                     resizeMode: ResizeMode) -> Bool {
     // swiftlint:disable:next force_try force_unwrapping
     let instance = try! actualExpression.evaluate()!
-    let testFileLocation = actualExpression.location.file
+
+    let testFileLocation: String
+    #if SWIFT_PACKAGE
+    testFileLocation = String(actualExpression.location.file) 
+    #else
+    testFileLocation = actualExpression.location.file
+    #endif
+
     let referenceImageDirectory = getDefaultReferenceDirectory(testFileLocation)
     let snapshotName = sanitizedTestName(name)
     let tolerance = tolerance ?? getTolerance()
@@ -202,7 +209,7 @@ func performDynamicSizeSnapshotTest(_ name: String?,
         return FBSnapshotTest.compareSnapshot(instance, isDeviceAgnostic: isDeviceAgnostic, usesDrawRect: usesDrawRect,
                                               snapshot: finalSnapshotName, record: isRecord,
                                               referenceDirectory: referenceImageDirectory, tolerance: tolerance,
-                                              filename: actualExpression.location.file, identifier: nil)
+                                              filename: testFileLocation, identifier: nil)
     }
 
     if isRecord {
@@ -262,5 +269,13 @@ public func == (lhs: Expectation<Snapshotable>, rhs: DynamicSizeSnapshot) {
                                             identifier: rhs.identifier,
                                             sizes: rhs.sizes,
                                             resizeMode: rhs.resizeMode))
+    }
+}
+
+extension String {
+    init(_ staticString: StaticString) {
+        self = staticString.withUTF8Buffer {
+            String(decoding: $0, as: UTF8.self)
+        }
     }
 }

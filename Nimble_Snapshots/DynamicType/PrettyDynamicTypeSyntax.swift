@@ -1,4 +1,7 @@
 import Nimble
+import UIKit
+
+import DynamicSize
 
 // MARK: - Nicer syntax using == operator
 

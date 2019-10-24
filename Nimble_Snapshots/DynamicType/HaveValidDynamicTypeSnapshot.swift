@@ -1,6 +1,9 @@
 import Nimble
 import UIKit
 
+import Support
+import DynamicSize
+
 public func allContentSizeCategories() -> [UIContentSizeCategory] {
     return [
         .extraSmall, .small, .medium,

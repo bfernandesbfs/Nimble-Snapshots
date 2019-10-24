@@ -110,7 +110,7 @@ public func setNimbleTolerance(_ tolerance: CGFloat) {
     FBSnapshotTest.sharedInstance.tolerance = tolerance
 }
 
-func getDefaultReferenceDirectory(_ sourceFileName: String) -> String {
+public func getDefaultReferenceDirectory(_ sourceFileName: String) -> String {
     if let globalReference = FBSnapshotTest.sharedInstance.referenceImagesDirectory {
         return globalReference
     }
@@ -162,7 +162,7 @@ private func parseFilename(filename: String) -> String {
     return sanitizedName
 }
 
-func sanitizedTestName(_ name: String?) -> String {
+public func sanitizedTestName(_ name: String?) -> String {
 	guard let testName = currentTestName() else {
 		fatalError("Test matchers must be called from inside a test block")
 	}
@@ -174,11 +174,11 @@ func sanitizedTestName(_ name: String?) -> String {
     return components.joined(separator: "_")
 }
 
-func getTolerance() -> CGFloat {
+public func getTolerance() -> CGFloat {
     return FBSnapshotTest.sharedInstance.tolerance
 }
 
-func clearFailureMessage(_ failureMessage: FailureMessage) {
+public func clearFailureMessage(_ failureMessage: FailureMessage) {
     failureMessage.actualValue = nil
     failureMessage.expected = ""
     failureMessage.postfixMessage = ""
@@ -194,7 +194,12 @@ private func performSnapshotTest(_ name: String?,
                                  tolerance: CGFloat?) -> Bool {
     // swiftlint:disable:next force_try force_unwrapping
     let instance = try! actualExpression.evaluate()!
-    let testFileLocation = actualExpression.location.file
+    let testFileLocation: String
+    #if SWIFT_PACKAGE
+    testFileLocation = String(actualExpression.location.file)
+    #else
+    testFileLocation = actualExpression.location.file
+    #endif
     let referenceImageDirectory = getDefaultReferenceDirectory(testFileLocation)
     let snapshotName = sanitizedTestName(name)
     let tolerance = tolerance ?? getTolerance()
@@ -202,7 +207,7 @@ private func performSnapshotTest(_ name: String?,
     let result = FBSnapshotTest.compareSnapshot(instance, isDeviceAgnostic: isDeviceAgnostic,
                                                 usesDrawRect: usesDrawRect, snapshot: snapshotName, record: false,
                                                 referenceDirectory: referenceImageDirectory, tolerance: tolerance,
-                                                filename: actualExpression.location.file, identifier: identifier)
+                                                filename: testFileLocation, identifier: identifier)
 
     if !result {
         clearFailureMessage(failureMessage)
@@ -220,7 +225,12 @@ private func recordSnapshot(_ name: String?,
                             failureMessage: FailureMessage) -> Bool {
     // swiftlint:disable:next force_try force_unwrapping
     let instance = try! actualExpression.evaluate()!
-    let testFileLocation = actualExpression.location.file
+    let testFileLocation: String
+    #if SWIFT_PACKAGE
+    testFileLocation = String(actualExpression.location.file)
+    #else
+    testFileLocation = actualExpression.location.file
+    #endif
     let referenceImageDirectory = getDefaultReferenceDirectory(testFileLocation)
     let snapshotName = sanitizedTestName(name)
     let tolerance = getTolerance()
@@ -234,7 +244,7 @@ private func recordSnapshot(_ name: String?,
                                       record: true,
                                       referenceDirectory: referenceImageDirectory,
                                       tolerance: tolerance,
-                                      filename: actualExpression.location.file,
+                                      filename: testFileLocation,
                                       identifier: identifier) {
         let name = name ?? snapshotName
         failureMessage.expected = "snapshot \(name) successfully recorded, replace recordSnapshot with a check"

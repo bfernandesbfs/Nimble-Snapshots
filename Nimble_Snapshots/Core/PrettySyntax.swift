@@ -1,5 +1,7 @@
 import Nimble
 
+import DynamicSize
+
 // MARK: - Nicer syntax using == operator
 
 public struct Snapshot {
